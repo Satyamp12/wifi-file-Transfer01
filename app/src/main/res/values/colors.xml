@@ -10,5 +10,14 @@
     <color name="text_primary">#F0F0F5</color>
     <color name="text_secondary">#A0A0B8</color>
     <color name="text_muted">#6B6B85</color>
-    <color name="icon_bg">#1A1A2E</color>
+    <color name="border">#1A2A3A</color>
+
+    <!-- Material Theme Colors -->
+    <color name="colorPrimary">#4F8CFF</color>
+    <color name="colorPrimaryVariant">#3A6FD8</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorSecondary">#2ED573</color>
+    <color name="colorOnSecondary">#000000</color>
+    <color name="colorSurface">#16213E</color>
+    <color name="colorOnSurface">#F0F0F5</color>
 </resources>

@@ -1,146 +1,258 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0F0F1E"
-    android:fillViewport="true">
+    android:background="@color/bg_primary">
 
-    <LinearLayout
+    <!-- Top App Bar -->
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:layout_height="wrap_content">
 
-        <!-- Title -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="WiFi File Transfer"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Phone se phone files bhejo - bina internet ke"
-            android:textSize="14sp"
-            android:textColor="#A0A0B8"
-            android:layout_marginBottom="28dp" />
-
-        <!-- Start / Stop Button -->
-        <Button
-            android:id="@+id/btnStart"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="▶  Server Start Karo"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#4F8CFF"
-            android:layout_marginBottom="20dp" />
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/bg_secondary"
+            app:title="WiFi File Transfer"
+            app:titleTextColor="@color/text_primary"
+            app:menu="@menu/menu_main"/>
+    </com.google.android.material.appbar.AppBarLayout>
 
-        <!-- Server Info (hidden until server starts) -->
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
         <LinearLayout
-            android:id="@+id/serverInfoLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#1A1A2E"
-            android:padding="20dp"
-            android:layout_marginBottom="20dp"
-            android:visibility="gone"
-            android:layout_gravity="center">
+            android:padding="16dp">
 
-            <!-- QR Code -->
-            <ImageView
-                android:id="@+id/imageQR"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
-                android:layout_gravity="center"
-                android:background="#FFFFFF"
-                android:padding="8dp"
+            <!-- Status Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/statusCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:cardBackgroundColor="@color/bg_card"
+                app:cardCornerRadius="12dp"
+                app:strokeColor="@color/accent"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvDeviceName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📱 Is Device"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/tvIpAddress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="IP: Detecting..."
+                        android:textColor="@color/accent"
+                        android:textSize="14sp"
+                        android:layout_marginTop="4dp"/>
+
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="● Disconnected"
+                        android:textColor="@color/text_muted"
+                        android:textSize="13sp"
+                        android:layout_marginTop="4dp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Send / Receive Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSend"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:text="📤 Send"
+                    android:textSize="16sp"
+                    app:backgroundTint="@color/accent"
+                    app:cornerRadius="12dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnReceive"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:text="📥 Receive"
+                    android:textSize="16sp"
+                    app:backgroundTint="@color/success"
+                    app:cornerRadius="12dp"/>
+            </LinearLayout>
+
+            <!-- Transfer Progress Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/progressCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
                 android:visibility="gone"
-                android:contentDescription="QR Code" />
+                app:cardBackgroundColor="@color/bg_card"
+                app:cardCornerRadius="12dp">
 
-            <!-- Server URL -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvFileName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="filename.mp4"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:ellipsize="end"/>
+
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:indicatorColor="@color/accent"
+                        app:trackColor="@color/bg_secondary"
+                        app:trackCornerRadius="4dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="6dp">
+
+                        <TextView
+                            android:id="@+id/tvProgress"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="0%"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"/>
+
+                        <TextView
+                            android:id="@+id/tvSpeed"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 KB/s"
+                            android:textColor="@color/accent"
+                            android:textSize="13sp"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvSize"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 B / 0 B"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Nearby Devices -->
             <TextView
-                android:id="@+id/textServerUrl"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Server: http://0.0.0.0:8080"
-                android:textSize="15sp"
-                android:textColor="#4F8CFF"
+                android:text="Nearby Devices"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:gravity="center"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="8dp"/>
 
-            <!-- Hotspot Info -->
-            <TextView
-                android:id="@+id/textHotspotInfo"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDevices"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="WiFi Hotspot starting..."
-                android:textSize="13sp"
-                android:textColor="#A0A0B8"
+                android:layout_marginBottom="12dp"
+                android:nestedScrollingEnabled="false"/>
+
+            <TextView
+                android:id="@+id/tvNoDevices"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔍 Searching for devices...\nSame WiFi pe dono phones connect karo"
+                android:textColor="@color/text_muted"
+                android:textSize="14sp"
                 android:gravity="center"
-                android:lineSpacingExtra="4dp" />
+                android:padding="20dp"
+                android:visibility="visible"/>
+
+            <!-- Transfer History -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Transfer History"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnClearHistory"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Clear"
+                    android:textColor="@color/danger"/>
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"/>
+
         </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
-        <!-- Add Files Button -->
-        <Button
-            android:id="@+id/btnAddFiles"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="📁  Files Share Karo"
-            android:textSize="14sp"
-            android:textColor="#4F8CFF"
-            android:backgroundTint="#1E2A4A"
-            android:visibility="gone"
-            android:layout_marginBottom="8dp" />
+    <!-- QR Code FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabQR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="QR Code"
+        android:src="@android:drawable/ic_menu_share"
+        app:backgroundTint="@color/accent"
+        app:tint="@android:color/white"/>
 
-        <!-- Open Received Files Button -->
-        <Button
-            android:id="@+id/btnOpenReceived"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="📥  Received Files Dekho"
-            android:textSize="14sp"
-            android:textColor="#2ED573"
-            android:backgroundTint="#1E2A4A"
-            android:visibility="gone"
-            android:layout_marginBottom="24dp" />
-
-        <!-- File List Header -->
-        <TextView
-            android:id="@+id/textFileCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0 files"
-            android:textSize="14sp"
-            android:textColor="#6B6B85"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp" />
-
-        <!-- File List -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerFiles"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
-
-        <!-- Empty State -->
-        <TextView
-            android:id="@+id/emptyState"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Abhi koi file share nahi hai.\nUpar 'Files Share Karo' dabakar files select karo."
-            android:textSize="14sp"
-            android:textColor="#6B6B85"
-            android:gravity="center"
-            android:padding="40dp" />
-
-    </LinearLayout>
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
