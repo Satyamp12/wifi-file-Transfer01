@@ -8,9 +8,11 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 
 /**
  * Foreground Service - HTTP server aur WiFi hotspot chalata hai.
@@ -54,7 +56,14 @@ class FileShareService : Service() {
 
     private fun startServer() {
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createNotification("Server start ho raha hai..."))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ServiceCompat.startForeground(
+                this, NOTIFICATION_ID, createNotification("Server start ho raha hai..."),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification("Server start ho raha hai..."))
+        }
 
         try {
             server = FileServer(this, 8080)

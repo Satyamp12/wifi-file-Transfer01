@@ -99,9 +99,9 @@ class FileServer(
     private fun handleInfo(): Response {
         val ip = getServerIP()
         val json = JSONObject()
-        json.put("url", "http://$ip:$listeningPort")
+        json.put("url", "http://$ip:$myPort")
         json.put("ip", ip)
-        json.put("port", listeningPort)
+        json.put("port", myPort)
         return jsonResponse(json)
     }
 
