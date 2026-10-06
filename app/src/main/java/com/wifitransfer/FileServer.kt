@@ -36,8 +36,8 @@ import java.net.NetworkInterface
  */
 class FileServer(
     private val context: Context,
-    port: Int = 8080
-) : NanoHTTPD(port) {
+    private val serverPort: Int = 8080
+) : NanoHTTPD(serverPort) {
 
     override fun serve(session: IHTTPSession): Response {
         val uri = session.uri
@@ -99,9 +99,9 @@ class FileServer(
     private fun handleInfo(): Response {
         val ip = getServerIP()
         val json = JSONObject()
-        json.put("url", "http://$ip:$myPort")
+        json.put("url", "http://$ip:$serverPort")
         json.put("ip", ip)
-        json.put("port", myPort)
+        json.put("port", serverPort)
         return jsonResponse(json)
     }
 
