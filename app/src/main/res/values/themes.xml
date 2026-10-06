@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.WiFiFileTransfer" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorPrimaryVariant">@color/accent_dark</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:colorBackground">@color/bg_primary</item>
+        <item name="android:statusBarColor">@color/bg_secondary</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

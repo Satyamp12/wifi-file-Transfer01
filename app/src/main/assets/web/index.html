@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WiFi File Transfer</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+      </div>
+      <div>
+        <h1>WiFi File Transfer</h1>
+        <p class="header-subtitle">Files bina internet ke transfer karo</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Upload Section -->
+    <section class="upload-section">
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" multiple style="display:none">
+        <div class="upload-icon">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <h2>Files bhejo</h2>
+        <p>Drag &amp; drop ya click karke select karo</p>
+      </div>
+      <div class="upload-progress-list" id="uploadProgressList"></div>
+    </section>
+
+    <!-- Shared Files (sender ne share kiye) -->
+    <section class="files-section">
+      <div class="files-header">
+        <h2>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Sender ke Files
+        </h2>
+        <span class="file-count" id="sharedCount">0 files</span>
+      </div>
+      <div class="files-grid" id="sharedGrid"></div>
+    </section>
+
+    <!-- Sent Files (tumne bheje) -->
+    <section class="files-section">
+      <div class="files-header">
+        <h2>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Tumne Bheje Files
+        </h2>
+        <span class="file-count" id="sentCount">0 files</span>
+      </div>
+      <div class="files-grid" id="sentGrid"></div>
+    </section>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F0F1E"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="WiFi File Transfer"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Phone se phone files bhejo - bina internet ke"
+            android:textSize="14sp"
+            android:textColor="#A0A0B8"
+            android:layout_marginBottom="28dp" />
+
+        <!-- Start / Stop Button -->
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="▶  Server Start Karo"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#4F8CFF"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Server Info (hidden until server starts) -->
+        <LinearLayout
+            android:id="@+id/serverInfoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#1A1A2E"
+            android:padding="20dp"
+            android:layout_marginBottom="20dp"
+            android:visibility="gone"
+            android:layout_gravity="center">
+
+            <!-- QR Code -->
+            <ImageView
+                android:id="@+id/imageQR"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center"
+                android:background="#FFFFFF"
+                android:padding="8dp"
+                android:visibility="gone"
+                android:contentDescription="QR Code" />
+
+            <!-- Server URL -->
+            <TextView
+                android:id="@+id/textServerUrl"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Server: http://0.0.0.0:8080"
+                android:textSize="15sp"
+                android:textColor="#4F8CFF"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Hotspot Info -->
+            <TextView
+                android:id="@+id/textHotspotInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="WiFi Hotspot starting..."
+                android:textSize="13sp"
+                android:textColor="#A0A0B8"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp" />
+        </LinearLayout>
+
+        <!-- Add Files Button -->
+        <Button
+            android:id="@+id/btnAddFiles"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📁  Files Share Karo"
+            android:textSize="14sp"
+            android:textColor="#4F8CFF"
+            android:backgroundTint="#1E2A4A"
+            android:visibility="gone"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Open Received Files Button -->
+        <Button
+            android:id="@+id/btnOpenReceived"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📥  Received Files Dekho"
+            android:textSize="14sp"
+            android:textColor="#2ED573"
+            android:backgroundTint="#1E2A4A"
+            android:visibility="gone"
+            android:layout_marginBottom="24dp" />
+
+        <!-- File List Header -->
+        <TextView
+            android:id="@+id/textFileCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 files"
+            android:textSize="14sp"
+            android:textColor="#6B6B85"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- File List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerFiles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+        <!-- Empty State -->
+        <TextView
+            android:id="@+id/emptyState"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Abhi koi file share nahi hai.\nUpar 'Files Share Karo' dabakar files select karo."
+            android:textSize="14sp"
+            android:textColor="#6B6B85"
+            android:gravity="center"
+            android:padding="40dp" />
+
+    </LinearLayout>
+</ScrollView>
