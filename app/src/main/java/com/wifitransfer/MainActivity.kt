@@ -139,34 +139,61 @@ class MainActivity : AppCompatActivity() {
         handleIncomingShare(intent)
     }
 
+    // singleTask mode mein - nayi share intent yahan aati hai
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIncomingShare(intent)
+    }
+
     // Dusri app se share hone pe ye chalega
     private fun handleIncomingShare(intent: Intent?) {
-        when (intent?.action) {
+        val action = intent?.action ?: return
+
+        // Sirf share intents handle karo - MAIN/LAUNCHER ignore karo
+        if (action != Intent.ACTION_SEND && action != Intent.ACTION_SEND_MULTIPLE) return
+
+        val uris = mutableListOf<Uri>()
+
+        when (action) {
             Intent.ACTION_SEND -> {
-                val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // File URI
+                val streamUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
                 } else {
                     @Suppress("DEPRECATION")
-                    intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                    intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                 }
-                uri?.let { pendingSharedUris = listOf(it) }
+                streamUri?.let { uris.add(it) }
+
+                // Text share (koi URI nahi) - ignore
+                if (uris.isEmpty()) return
             }
             Intent.ACTION_SEND_MULTIPLE -> {
-                val uris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val multiUris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
                 } else {
                     @Suppress("DEPRECATION")
-                    intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+                    intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                 }
-                uris?.let { pendingSharedUris = it }
+                multiUris?.let { uris.addAll(it) }
+                if (uris.isEmpty()) return
             }
         }
 
-        // Agar pending URIs hain to banner dikhao
-        if (pendingSharedUris.isNotEmpty()) {
+        // URIs mil gayi - save karo
+        pendingSharedUris = uris
+
+        // Devices check karo
+        val devices = viewModel.devices.value
+        if (devices.isNotEmpty()) {
+            // Devices already hain - seedha dialog dikhao
+            showDeviceSelectDialog(uris)
+        } else {
+            // Devices abhi nahi mile - message dikhao
             Toast.makeText(
                 this,
-                "📤 ${pendingSharedUris.size} file ready - Neeche device select karo ya Receive mode on karo",
+                "✅ ${uris.size} file(s) ready!\n📡 Neeche device dhundh raha hai...\nDevice milne pe 'Send' dabao",
                 Toast.LENGTH_LONG
             ).show()
         }
