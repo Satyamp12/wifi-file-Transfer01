@@ -59,36 +59,68 @@ class MainActivity : AppCompatActivity() {
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
-            val device = selectedDevice ?: return@registerForActivityResult
-            val data = result.data
-            // Single file
-            data?.data?.let { uri ->
-                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                viewModel.sendFile(uri, device, device.name)
+            val device = selectedDevice ?: run {
+                Toast.makeText(this, "Device select nahi hai!", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
             }
+            val data = result.data
+
+            val urisToSend = mutableListOf<Uri>()
+
+            // Single file
+            data?.data?.let { uri -> urisToSend.add(uri) }
+
             // Multiple files
             data?.clipData?.let { clipData ->
                 for (i in 0 until clipData.itemCount) {
-                    val uri = clipData.getItemAt(i).uri
-                    try {
-                        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    } catch (e: Exception) { /* ignore */ }
-                    viewModel.sendFile(uri, device, device.name)
+                    urisToSend.add(clipData.getItemAt(i).uri)
                 }
             }
+
+            if (urisToSend.isEmpty()) {
+                Toast.makeText(this, "Koi file select nahi ki", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            // Permission lene ki koshish karo (optional - fail hone pe bhi chalega)
+            urisToSend.forEach { uri ->
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (e: Exception) {
+                    // Kuch URIs persistable nahi hote - ignore karo
+                }
+            }
+
+            // Bhejo
+            urisToSend.forEach { uri -> viewModel.sendFile(uri, device, device.name) }
+            Toast.makeText(this, "📤 ${urisToSend.size} file(s) bhej raha hai...", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun openFilePicker() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "*/*"
-            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-            putExtra(Intent.EXTRA_LOCAL_ONLY, false) // Drive + local dono
-            addCategory(Intent.CATEGORY_OPENABLE)
+        try {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                type = "*/*"
+                putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                putExtra(Intent.EXTRA_LOCAL_ONLY, false)
+                addCategory(Intent.CATEGORY_OPENABLE)
+            }
+            pickFile.launch(Intent.createChooser(intent, "Files select karo"))
+        } catch (e: Exception) {
+            // Fallback - simple file picker
+            try {
+                val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                    type = "*/*"
+                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                }
+                pickFile.launch(intent)
+            } catch (e2: Exception) {
+                Toast.makeText(this, "File picker open nahi hua: ${e2.message}", Toast.LENGTH_LONG).show()
+            }
         }
-        // chooser dikhao - Files, Gallery, Drive sab options
-        val chooser = Intent.createChooser(intent, "Files select karo")
-        pickFile.launch(chooser)
     }
 
     private val requestPermissions = registerForActivityResult(
@@ -474,21 +506,32 @@ class MainActivity : AppCompatActivity() {
             )
 
             val mime = getMimeType(fileName)
+
+            // Hamesha chooser use karo - resolveActivity Android 11+ pe kaam nahi karta
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, mime)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
-            // Koi app hai jo ye file khol sake?
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(intent)
-            } else {
-                // Chooser dikhao
-                startActivity(Intent.createChooser(intent, "Open with..."))
+            try {
+                startActivity(Intent.createChooser(intent, "$fileName kholne ke liye app select karo"))
+            } catch (e: Exception) {
+                // Mime type se nahi khula - */* try karo
+                val fallbackIntent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "*/*")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                try {
+                    startActivity(Intent.createChooser(fallbackIntent, "Open with"))
+                } catch (e2: Exception) {
+                    Toast.makeText(this, "Koi app nahi mili is file ke liye", Toast.LENGTH_SHORT).show()
+                }
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "File open nahi ho saki: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
