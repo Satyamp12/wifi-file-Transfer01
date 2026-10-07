@@ -1,6 +1,7 @@
 package com.wifitransfer
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -9,6 +10,8 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -318,6 +321,21 @@ class MainActivity : AppCompatActivity() {
                 val date = Date(record.timestamp)
                 val fmt = SimpleDateFormat("hh:mm a", Locale.getDefault())
                 itemView.findViewById<TextView>(R.id.tvHistoryTime).text = fmt.format(date)
+
+                // FILE OPEN - click karne pe file khulega
+                itemView.setOnClickListener {
+                    if (record.direction == "RECEIVED") {
+                        openReceivedFile(record.fileName)
+                    }
+                }
+
+                // Long press pe share option
+                itemView.setOnLongClickListener {
+                    if (record.direction == "RECEIVED") {
+                        shareReceivedFile(record.fileName)
+                    }
+                    true
+                }
             }
 
             private fun formatSize(bytes: Long): String {
@@ -327,6 +345,92 @@ class MainActivity : AppCompatActivity() {
                     else -> "$bytes B"
                 }
             }
+        }
+    }
+
+    // ============ File Open & Share ============
+
+    private fun openReceivedFile(fileName: String) {
+        try {
+            val receivedDir = File(getExternalFilesDir(null), "received")
+            val file = File(receivedDir, fileName)
+            if (!file.exists()) {
+                Toast.makeText(this, "File nahi mili: $fileName", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                file
+            )
+
+            val mime = getMimeType(fileName)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mime)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            // Koi app hai jo ye file khol sake?
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+            } else {
+                // Chooser dikhao
+                startActivity(Intent.createChooser(intent, "Open with..."))
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "File open nahi ho saki: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun shareReceivedFile(fileName: String) {
+        try {
+            val receivedDir = File(getExternalFilesDir(null), "received")
+            val file = File(receivedDir, fileName)
+            if (!file.exists()) return
+
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                file
+            )
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = getMimeType(fileName)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(intent, "Share $fileName"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Share nahi ho saka", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getMimeType(fileName: String): String {
+        val ext = fileName.substringAfterLast('.', "").lowercase()
+        return when (ext) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            "gif" -> "image/gif"
+            "webp" -> "image/webp"
+            "mp4" -> "video/mp4"
+            "mkv" -> "video/x-matroska"
+            "avi" -> "video/x-msvideo"
+            "mp3" -> "audio/mpeg"
+            "wav" -> "audio/wav"
+            "ogg" -> "audio/ogg"
+            "aac" -> "audio/aac"
+            "pdf" -> "application/pdf"
+            "doc" -> "application/msword"
+            "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            "xls" -> "application/vnd.ms-excel"
+            "xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            "txt" -> "text/plain"
+            "apk" -> "application/vnd.android.package-archive"
+            "zip" -> "application/zip"
+            "rar" -> "application/x-rar-compressed"
+            else -> "*/*"
         }
     }
 }
