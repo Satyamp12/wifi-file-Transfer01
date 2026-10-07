@@ -1,4 +1,4 @@
-name: Build Debug APK
+name: Build APK
 
 on:
   push:
@@ -24,15 +24,45 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Decode keystore from secret
+        run: |
+          mkdir -p keystore
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/debug.keystore
+            echo "Keystore from secret used"
+          else
+            # Secret nahi hai - fixed keystore generate karo
+            keytool -genkeypair \
+              -alias androiddebugkey \
+              -keypass android \
+              -keystore keystore/debug.keystore \
+              -storepass android \
+              -dname "CN=WiFiTransfer,O=WiFiTransfer,C=IN" \
+              -keyalg RSA -keysize 2048 -validity 36500
+            echo "New keystore generated"
+            # Base64 print karo - pehli baar copy karke GitHub Secret mein daalo
+            base64 keystore/debug.keystore > keystore/debug.keystore.b64
+            echo "=== COPY THIS TO GITHUB SECRET KEYSTORE_BASE64 ==="
+            cat keystore/debug.keystore.b64
+            echo "=== END ==="
+          fi
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build APK
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Show APK info
+        run: |
+          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -1)
+          echo "APK: $APK_PATH"
+          ls -lh $APK_PATH || echo "APK not found"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: WiFiFileTransfer-v${{ github.run_number }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 90
