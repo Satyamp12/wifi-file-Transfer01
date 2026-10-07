@@ -24,13 +24,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Decode keystore from secret
+      - name: Check keystore
         run: |
-          mkdir -p keystore
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d ' \n\r' | base64 -d > keystore/debug.keystore
-            echo "Keystore from secret used - size: $(wc -c < keystore/debug.keystore) bytes"
+          if [ -f "keystore/debug.keystore" ]; then
+            echo "Keystore found! Size: $(wc -c < keystore/debug.keystore) bytes"
           else
+            echo "Keystore not found - creating new one"
+            mkdir -p keystore
             keytool -genkeypair \
               -alias androiddebugkey \
               -keypass android \
@@ -38,11 +38,6 @@ jobs:
               -storepass android \
               -dname "CN=WiFiTransfer,O=WiFiTransfer,C=IN" \
               -keyalg RSA -keysize 2048 -validity 36500
-            echo "New keystore generated"
-            echo "=== COPY THIS TO GITHUB SECRET KEYSTORE_BASE64 ==="
-            base64 -w 0 keystore/debug.keystore
-            echo ""
-            echo "=== END ==="
           fi
 
       - name: Make gradlew executable
@@ -50,12 +45,6 @@ jobs:
 
       - name: Build APK
         run: ./gradlew assembleDebug --no-daemon
-
-      - name: Show APK info
-        run: |
-          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -1)
-          echo "APK: $APK_PATH"
-          ls -lh $APK_PATH || echo "APK not found"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

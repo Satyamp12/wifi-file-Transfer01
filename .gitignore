@@ -9,3 +9,5 @@
 .cxx
 local.properties
 app/build/
+# keystore commit karo - DO NOT ignore
+# !keystore/debug.keystore
