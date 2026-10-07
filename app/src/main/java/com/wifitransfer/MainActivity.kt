@@ -56,11 +56,38 @@ class MainActivity : AppCompatActivity() {
     private val historyAdapter = HistoryAdapter()
     private var selectedDevice: DeviceInfo? = null
 
-    private val pickFile = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        if (!uris.isNullOrEmpty()) {
+    private val pickFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
             val device = selectedDevice ?: return@registerForActivityResult
-            uris.forEach { uri -> viewModel.sendFile(uri, device, device.name) }
+            val data = result.data
+            // Single file
+            data?.data?.let { uri ->
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                viewModel.sendFile(uri, device, device.name)
+            }
+            // Multiple files
+            data?.clipData?.let { clipData ->
+                for (i in 0 until clipData.itemCount) {
+                    val uri = clipData.getItemAt(i).uri
+                    try {
+                        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    } catch (e: Exception) { /* ignore */ }
+                    viewModel.sendFile(uri, device, device.name)
+                }
+            }
         }
+    }
+
+    private fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "*/*"
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            putExtra(Intent.EXTRA_LOCAL_ONLY, false) // Drive + local dono
+            addCategory(Intent.CATEGORY_OPENABLE)
+        }
+        // chooser dikhao - Files, Gallery, Drive sab options
+        val chooser = Intent.createChooser(intent, "Files select karo")
+        pickFile.launch(chooser)
     }
 
     private val requestPermissions = registerForActivityResult(
@@ -74,6 +101,63 @@ class MainActivity : AppCompatActivity() {
         initViews()
         checkPermissions()
         observeViewModel()
+
+        // Kisi aur app se share karke aaya hai?
+        handleIncomingShare(intent)
+    }
+
+    // Dusri app se share hone pe ye chalega
+    private fun handleIncomingShare(intent: Intent?) {
+        when (intent?.action) {
+            Intent.ACTION_SEND -> {
+                val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableExtra(Intent.EXTRA_STREAM)
+                }
+                uri?.let { sharedUri ->
+                    // Device select karne ke liye dialog dikhao
+                    showDeviceSelectDialog(listOf(sharedUri))
+                }
+            }
+            Intent.ACTION_SEND_MULTIPLE -> {
+                val uris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
+                }
+                uris?.let { sharedUris ->
+                    showDeviceSelectDialog(sharedUris)
+                }
+            }
+        }
+    }
+
+    private fun showDeviceSelectDialog(uris: List<Uri>) {
+        val devices = viewModel.devices.value
+        if (devices.isEmpty()) {
+            Toast.makeText(this, "Koi device nahi mila! Pehle same WiFi pe dono phones connect karo.", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (devices.size == 1) {
+            // Sirf ek device hai - seedha bhejo
+            val device = devices[0]
+            uris.forEach { uri -> viewModel.sendFile(uri, device, device.name) }
+            Toast.makeText(this, "${uris.size} file(s) ${device.name} ko bhej raha hai...", Toast.LENGTH_SHORT).show()
+        } else {
+            // Multiple devices - choose karo
+            val names = devices.map { it.name }.toTypedArray()
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Kisko bhejna hai?")
+                .setItems(names) { _, which ->
+                    val device = devices[which]
+                    uris.forEach { uri -> viewModel.sendFile(uri, device, device.name) }
+                    Toast.makeText(this, "${uris.size} file(s) bhej raha hai...", Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
     }
 
     private fun initViews() {
@@ -107,7 +191,7 @@ class MainActivity : AppCompatActivity() {
             if (deviceAdapter.itemCount == 0) {
                 Toast.makeText(this, "Pehle koi device dhundo!", Toast.LENGTH_SHORT).show()
             } else {
-                pickFile.launch(arrayOf("*/*"))
+                openFilePicker()
             }
         }
 
@@ -212,7 +296,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun pickFileForDevice(device: DeviceInfo) {
         selectedDevice = device
-        pickFile.launch(arrayOf("*/*"))
+        openFilePicker()
     }
 
     private fun showQRDialog() {
