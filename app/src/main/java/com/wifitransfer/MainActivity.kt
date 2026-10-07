@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     private val deviceAdapter = DeviceAdapter { device -> pickFileForDevice(device) }
     private val historyAdapter = HistoryAdapter()
     private var selectedDevice: DeviceInfo? = null
+    private var pendingSharedUris: List<Uri> = emptyList() // Share se aaye URIs
 
     private val pickFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
@@ -116,10 +117,7 @@ class MainActivity : AppCompatActivity() {
                     @Suppress("DEPRECATION")
                     intent.getParcelableExtra(Intent.EXTRA_STREAM)
                 }
-                uri?.let { sharedUri ->
-                    // Device select karne ke liye dialog dikhao
-                    showDeviceSelectDialog(listOf(sharedUri))
-                }
+                uri?.let { pendingSharedUris = listOf(it) }
             }
             Intent.ACTION_SEND_MULTIPLE -> {
                 val uris = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -128,34 +126,46 @@ class MainActivity : AppCompatActivity() {
                     @Suppress("DEPRECATION")
                     intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM)
                 }
-                uris?.let { sharedUris ->
-                    showDeviceSelectDialog(sharedUris)
-                }
+                uris?.let { pendingSharedUris = it }
             }
+        }
+
+        // Agar pending URIs hain to banner dikhao
+        if (pendingSharedUris.isNotEmpty()) {
+            Toast.makeText(
+                this,
+                "📤 ${pendingSharedUris.size} file ready - Neeche device select karo ya Receive mode on karo",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
     private fun showDeviceSelectDialog(uris: List<Uri>) {
         val devices = viewModel.devices.value
         if (devices.isEmpty()) {
-            Toast.makeText(this, "Koi device nahi mila! Pehle same WiFi pe dono phones connect karo.", Toast.LENGTH_LONG).show()
+            // Devices nahi mile - save karke baad mein bhejo
+            pendingSharedUris = uris
+            Toast.makeText(
+                this,
+                "📡 Device dhund raha hai... Jab device mile to Send button dabao",
+                Toast.LENGTH_LONG
+            ).show()
             return
         }
         if (devices.size == 1) {
-            // Sirf ek device hai - seedha bhejo
             val device = devices[0]
             uris.forEach { uri -> viewModel.sendFile(uri, device, device.name) }
-            Toast.makeText(this, "${uris.size} file(s) ${device.name} ko bhej raha hai...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "📤 ${uris.size} file(s) bhej raha hai...", Toast.LENGTH_SHORT).show()
         } else {
-            // Multiple devices - choose karo
-            val names = devices.map { it.name }.toTypedArray()
+            val names = devices.map { "${it.name} (${it.ipAddress})" }.toTypedArray()
             android.app.AlertDialog.Builder(this)
-                .setTitle("Kisko bhejna hai?")
+                .setTitle("📱 Kisko bhejna hai?")
                 .setItems(names) { _, which ->
                     val device = devices[which]
                     uris.forEach { uri -> viewModel.sendFile(uri, device, device.name) }
-                    Toast.makeText(this, "${uris.size} file(s) bhej raha hai...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "📤 Bhej raha hai...", Toast.LENGTH_SHORT).show()
                 }
+                .setNegativeButton("Cancel", null)
                 .show()
         }
     }
@@ -368,7 +378,21 @@ class MainActivity : AppCompatActivity() {
                 itemView.findViewById<TextView>(R.id.tvDeviceIp).text = device.ipAddress
                 itemView.findViewById<TextView>(R.id.tvDeviceIcon).text = if (device.isTV) "📺" else "📱"
                 itemView.findViewById<MaterialButton>(R.id.btnSendToDevice).setOnClickListener {
-                    onSendClick(device)
+                    // Agar share se pending files hain - seedha bhejo
+                    if (pendingSharedUris.isNotEmpty()) {
+                        pendingSharedUris.forEach { uri ->
+                            viewModel.sendFile(uri, device, device.name)
+                        }
+                        Toast.makeText(
+                            this@MainActivity,
+                            "📤 ${pendingSharedUris.size} file(s) ${device.name} ko bhej raha hai...",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        pendingSharedUris = emptyList() // clear karo
+                    } else {
+                        // Normal flow - file picker kholo
+                        onSendClick(device)
+                    }
                 }
             }
         }
