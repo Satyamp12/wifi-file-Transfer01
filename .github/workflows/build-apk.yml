@@ -28,10 +28,9 @@ jobs:
         run: |
           mkdir -p keystore
           if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > keystore/debug.keystore
-            echo "Keystore from secret used"
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d ' \n\r' | base64 -d > keystore/debug.keystore
+            echo "Keystore from secret used - size: $(wc -c < keystore/debug.keystore) bytes"
           else
-            # Secret nahi hai - fixed keystore generate karo
             keytool -genkeypair \
               -alias androiddebugkey \
               -keypass android \
@@ -40,10 +39,9 @@ jobs:
               -dname "CN=WiFiTransfer,O=WiFiTransfer,C=IN" \
               -keyalg RSA -keysize 2048 -validity 36500
             echo "New keystore generated"
-            # Base64 print karo - pehli baar copy karke GitHub Secret mein daalo
-            base64 keystore/debug.keystore > keystore/debug.keystore.b64
             echo "=== COPY THIS TO GITHUB SECRET KEYSTORE_BASE64 ==="
-            cat keystore/debug.keystore.b64
+            base64 -w 0 keystore/debug.keystore
+            echo ""
             echo "=== END ==="
           fi
 
